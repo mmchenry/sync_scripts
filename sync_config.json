@@ -1,0 +1,229 @@
+{
+  "sync_pairs": [
+    {
+      "name": "data_mean_images_to_local",
+      "source": "/media/mmchenry/ThumbDrive/mean_images",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/mean_images",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_mean_images_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/mean_images",
+      "destination": "/media/mmchenry/ThumbDrive/mean_images",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_under_1_to_local",
+      "source": "/media/mmchenry/ThumbDrive/sleap_flowtank_under_1",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_under_1",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_under_1_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_under_1",
+      "destination": "/media/mmchenry/ThumbDrive/sleap_flowtank_under_1",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_under_3_to_local",
+      "source": "/media/mmchenry/ThumbDrive/sleap_flowtank_under_3",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_under_3",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_under_3_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_under_3",
+      "destination": "/media/mmchenry/ThumbDrive/sleap_flowtank_under_3",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_side_1_to_local",
+      "source": "/media/mmchenry/ThumbDrive/sleap_flowtank_side_1",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_side_1",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_side_1_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_side_1",
+      "destination": "/media/mmchenry/ThumbDrive/sleap_flowtank_side_1",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_side_3_to_local",
+      "source": "/media/mmchenry/ThumbDrive/sleap_flowtank_side_3",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_side_3",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_sleap_flowtank_side_3_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/sleap_flowtank_side_3",
+      "destination": "/media/mmchenry/ThumbDrive/sleap_flowtank_side_3",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_syncing_scripts_to_local",
+      "source": "/media/mmchenry/ThumbDrive/syncing_scripts",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/syncing_scripts",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_syncing_scripts_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/syncing_scripts",
+      "destination": "/media/mmchenry/ThumbDrive/syncing_scripts",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_matlab_data_to_local",
+      "source": "/media/mmchenry/ThumbDrive/matlab_data",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/matlab_data",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "data_matlab_data_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/matlab_data",
+      "destination": "/media/mmchenry/ThumbDrive/matlab_data",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "video_processed_video_to_local",
+      "source": "/media/mmchenry/ThumbDrive/processed_video",
+      "destination": "/home/mmchenry/Documents/catfish_kinematics/processed_video",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "video_processed_video_to_thumb",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/processed_video",
+      "destination": "/media/mmchenry/ThumbDrive/processed_video",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--delete",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ]
+    },
+    {
+      "name": "video_raw_oneway",
+      "source": "/home/mmchenry/Documents/catfish_kinematics/raw",
+      "destination": "/media/mmchenry/ThumbDrive/raw",
+      "enabled": true,
+      "rsync_options": [
+        "-av",
+        "--progress",
+        "--no-perms",
+        "--no-group"
+      ],
+      "description": "One-way sync: network -> thumb drive only"
+    }
+  ],
+  "global_rsync_options": [
+    "-av",
+    "--progress"
+  ],
+  "exclude_patterns": [
+    "*.tmp",
+    "*.log",
+    ".DS_Store",
+    "Thumbs.db",
+    "__pycache__",
+    "*.pyc"
+  ]
+}
