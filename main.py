@@ -46,11 +46,40 @@ else:
     raise RuntimeError("Could not find directory to sync with.")
 
 # Remote volume base path
-remote_base = "/media/mmchenry/ThumbDrive/"
+remote_data_root = "/media/mmchenry/ThumbDrive/"
+remote_video_root = "/media/mmchenry/ThumbDrive/"
+if os.path.exists(remote_data_root):
+    print("✓ Using THUMB drive paths")
+else:
+    raise RuntimeError("Could not find Thumbdrive to sync with.")
 
 print(f"Local data root: {local_data_root}")
 print(f"Local video root: {local_video_root}")
-print(f"Remote base: {remote_base}")
+print(f"Remote data root: {remote_data_root}")
+print(f"Remote video root: {remote_video_root}")
+
+
+# %% =======================================================
+""" Paths for Mac Laptop + Linux machine """
+
+if os.path.exists("/Users/mmchenry/Documents"):
+    print("✓ Using MAC laptop paths")
+    local_data_root = "/Users/mmchenry/Documents/Projects/catfish_kinematics"
+    local_video_root = "/Users/mmchenry/Documents/Video/catfish_kinematics"
+else:
+    raise RuntimeError("Could not find Mac laptop to sync with.")
+
+if os.path.exists("/Volumes/Shared/catfish_kinematics"):
+    remote_data_root = "/Volumes/Shared/catfish_kinematics"
+    remote_video_root = "/Volumes/Shared/catfish_kinematics"
+    print("✓ Using Linux machine paths")
+else:
+    raise RuntimeError("Could not find Linux machine to sync with.")
+
+print(f"Local data root: {local_data_root}")
+print(f"Local video root: {local_video_root}")
+print(f"Remote data root: {remote_data_root}")
+print(f"Remote video root: {remote_video_root}")
 
 
 # %% =======================================================
@@ -63,7 +92,8 @@ sync_manager = create_sync_manager(
     data_dirs=data_dirs,
     video_dirs=video_dirs,
     one_way_video_dirs=one_way_video_dirs,
-    remote_base=remote_base,
+    remote_data_base=remote_data_root,
+    remote_video_base=remote_video_root,
     checksum_mode=checksum_mode
 )
 
