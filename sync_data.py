@@ -2,7 +2,7 @@
 """
 Data Synchronization Script using rsync
 
-This script synchronizes data between a thumb drive and network storage locations
+This script synchronizes data between a remote volume and local storage locations
 using rsync for efficient file transfer and synchronization.
 """
 
@@ -16,129 +16,88 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from datetime import datetime
 
-if os.path.exists("/mnt/schooling_data"):
-    data_root = "/mnt/schooling_data/catfish_flowtank_kinematics"
-    video_root = "/mnt/schooling_video/catfish_kinematics"
-    print("✓ Using NETWORK paths (prioritized)")
+
+def setup_sync_directories(data_dirs: List[str], video_dirs: List[str], one_way_video_dirs: List[str], 
+                          remote_base: str = "/media/mmchenry/ThumbDrive/") -> None:
+    """Create necessary directories on remote volume and check for unsynced directories."""
     
-elif os.path.exists("/home/mmchenry/Documents/catfish_kinematics"):
-    data_root = "/home/mmchenry/Documents/catfish_kinematics"
-    video_root = "/home/mmchenry/Documents/catfish_kinematics"
-    print("⚠️  Using LOCAL paths (network not available)")
-else:
-    raise RuntimeError("Could not find directory to sync with.")
+    # Create data directories
+    for dir_name in data_dirs:
+        dir_path = os.path.join(remote_base, dir_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+            print(f"Created directory: {dir_path}")
 
-print(f"Data root: {data_root}")
-print(f"Video root: {video_root}")
+    # Create video directories
+    for dir_name in video_dirs:
+        dir_path = os.path.join(remote_base, dir_name) 
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+            print(f"Created directory: {dir_path}")
 
-thumb_root = "/media/mmchenry/ThumbDrive/catfish_flowtank_kinematics"
+    # Create one-way video directories
+    for dir_name in one_way_video_dirs:
+        dir_path = os.path.join(remote_base, dir_name) 
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+            print(f"Created directory: {dir_path}")
 
-checksum_mode = True
-
-# List of data directories to sync
-data_dirs = [
-    "mean_images",
-    "sleap_flowtank_under_1",
-    "sleap_flowtank_under_3",
-    "sleap_flowtank_side_1",
-    "sleap_flowtank_side_3",
-    "syncing_scripts",
-    "matlab_data"
-]
-
-# Verify thumb drive directories exist
-for dir_name in data_dirs:
-    dir_path = os.path.join(thumb_root, dir_name)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-        print(f"Created directory: {dir_path}")
+    # Check for directories in remote_base that are not included in sync lists
+    check_unsynced_directories(data_dirs, video_dirs, one_way_video_dirs, remote_base)
 
 
-# List of video directories to sync (bidirectional)
-video_dirs = [
-    "processed_video"
-]
-
-# List of one-way video directories (network -> thumb drive only)
-one_way_video_dirs = [
-    "raw"
-]
-
-# Verify thumb drive directories exist (directly under /media/mmchenry/ThumbDrive/)
-thumb_drive_base = "/media/mmchenry/ThumbDrive/"
-
-# Create data directories
-for dir_name in data_dirs:
-    dir_path = os.path.join(thumb_drive_base, dir_name)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-        print(f"Created directory: {dir_path}")
-
-# Create video directories
-for dir_name in video_dirs:
-    dir_path = os.path.join(thumb_drive_base, dir_name) 
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-        print(f"Created directory: {dir_path}")
-
-# Create one-way video directories
-for dir_name in one_way_video_dirs:
-    dir_path = os.path.join(thumb_drive_base, dir_name) 
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-        print(f"Created directory: {dir_path}")
-
-# Check for directories in thumb_drive_base that are not included in sync lists
-def check_unsynced_directories():
-    """Check for directories in thumb_drive_base that are not in data_dirs or video_dirs."""
-    if not os.path.exists(thumb_drive_base):
+def check_unsynced_directories(data_dirs: List[str], video_dirs: List[str], one_way_video_dirs: List[str],
+                              remote_base: str = "/media/mmchenry/ThumbDrive/") -> None:
+    """Check for directories in remote_base that are not in data_dirs or video_dirs."""
+    if not os.path.exists(remote_base):
         return
     
     # Include one-way video directories in the check
     all_synced_dirs = set(data_dirs + video_dirs + one_way_video_dirs)
-    thumb_dirs = []
+    remote_dirs = []
     
     try:
-        thumb_dirs = [d for d in os.listdir(thumb_drive_base) 
-                     if os.path.isdir(os.path.join(thumb_drive_base, d))]
+        remote_dirs = [d for d in os.listdir(remote_base) 
+                     if os.path.isdir(os.path.join(remote_base, d))]
     except PermissionError:
-        print(f"Warning: Cannot access {thumb_drive_base} to check for unsynced directories")
+        print(f"Warning: Cannot access {remote_base} to check for unsynced directories")
         return
     
-    unsynced_dirs = [d for d in thumb_dirs if d not in all_synced_dirs]
+    unsynced_dirs = [d for d in remote_dirs if d not in all_synced_dirs]
     
     if unsynced_dirs:
         print("\n" + "="*60)
-        print("WARNING: Found directories in thumb_drive_base that are NOT included in sync:")
+        print("WARNING: Found directories in remote_base that are NOT included in sync:")
         print("="*60)
         for dir_name in unsynced_dirs:
-            dir_path = os.path.join(thumb_drive_base, dir_name)
+            dir_path = os.path.join(remote_base, dir_name)
             print(f"  - {dir_name} ({dir_path})")
         print("\nThese directories will NOT be synchronized.")
         print("Add them to either 'data_dirs', 'video_dirs', or 'one_way_video_dirs' if they should be synced.")
         print("="*60 + "\n")
     else:
-        print("✓ All directories in thumb_drive_base are included in sync configuration")
+        print("✓ All directories in remote_base are included in sync configuration")
 
-# Run the check
-check_unsynced_directories()
-    
-print(f"Data root: {data_root}")
-print(f"Video root: {video_root}")
-print(f"Thumb root: {thumb_root}")
 
 class DataSyncManager:
     def __init__(self, config_file: str = None, checksum_mode: bool = False):
         """Initialize the DataSyncManager with configuration."""
-        self.thumb_drive_path = "/media/mmchenry/ThumbDrive/"
+        self.remote_path = "/media/mmchenry/ThumbDrive/"
         self.config_file = config_file or "sync_config.json"
         self.checksum_mode = checksum_mode
         self.setup_logging()
-        self.load_config()
+        
+        # Default values - will be overridden by create_sync_manager
+        self.local_data_root = "/home/mmchenry/Documents/catfish_kinematics"
+        self.local_video_root = "/home/mmchenry/Documents/catfish_kinematics"
+        self.data_dirs = []
+        self.video_dirs = []
+        self.one_way_video_dirs = []
+        self.remote_base = "/media/mmchenry/ThumbDrive/"
     
     def setup_logging(self):
         """Setup logging configuration."""
-        log_dir = Path(self.thumb_drive_path) / "syncing_scripts" / "logs"
+        log_dir = Path(self.remote_path) / "syncing_scripts" / "logs"
         log_dir.mkdir(exist_ok=True)
         
         log_file = log_dir / f"sync_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
@@ -155,84 +114,84 @@ class DataSyncManager:
     
     def load_config(self):
         """Load synchronization configuration from JSON file."""
-        config_path = Path(self.thumb_drive_path) / "syncing_scripts" / self.config_file
+        config_path = Path(self.remote_path) / "syncing_scripts" / self.config_file
         
         # Always generate sync pairs dynamically based on detected paths
         # This ensures the script works correctly on different systems
         sync_pairs = []
         
-        # Sync data directories bidirectionally (thumb drive <-> local)
-        for data_dir in data_dirs:
-            # Thumb drive -> Local (NO deletion - safe sync)
+        # Sync data directories bidirectionally (remote <-> local)
+        for data_dir in self.data_dirs:
+            # Remote -> Local (NO deletion - safe sync)
             rsync_options_safe = ["-av", "--progress", "--no-perms", "--no-group"]
             if self.checksum_mode:
                 rsync_options_safe.append("--checksum")
             
-            # Local -> Thumb drive (WITH deletion - source deletions propagate)
+            # Local -> Remote (WITH deletion - source deletions propagate)
             rsync_options_with_delete = ["-av", "--delete", "--progress", "--no-perms", "--no-group"]
             if self.checksum_mode:
                 rsync_options_with_delete.append("--checksum")
             
-            # Thumb drive -> Local (safe sync, no deletion)
+            # Remote -> Local (safe sync, no deletion)
             sync_pairs.append({
                 "name": f"data_{data_dir}_to_local",
-                "source": f"/media/mmchenry/ThumbDrive/{data_dir}",
-                "destination": f"{data_root}/{data_dir}",
+                "source": f"{self.remote_base}/{data_dir}",
+                "destination": f"{self.local_data_root}/{data_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_safe
             })
             
-            # Local -> Thumb drive (with deletion - source deletions propagate)
+            # Local -> Remote (with deletion - source deletions propagate)
             sync_pairs.append({
-                "name": f"data_{data_dir}_to_thumb",
-                "source": f"{data_root}/{data_dir}",
-                "destination": f"/media/mmchenry/ThumbDrive/{data_dir}",
+                "name": f"data_{data_dir}_to_remote",
+                "source": f"{self.local_data_root}/{data_dir}",
+                "destination": f"{self.remote_base}/{data_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_with_delete
             })
         
-        # Sync video directories bidirectionally (thumb drive <-> local)
-        for video_dir in video_dirs:
-            # Thumb drive -> Local (NO deletion - safe sync)
+        # Sync video directories bidirectionally (remote <-> local)
+        for video_dir in self.video_dirs:
+            # Remote -> Local (NO deletion - safe sync)
             rsync_options_safe = ["-av", "--progress", "--no-perms", "--no-group"]
             if self.checksum_mode:
                 rsync_options_safe.append("--checksum")
             
-            # Local -> Thumb drive (WITH deletion - source deletions propagate)
+            # Local -> Remote (WITH deletion - source deletions propagate)
             rsync_options_with_delete = ["-av", "--delete", "--progress", "--no-perms", "--no-group"]
             if self.checksum_mode:
                 rsync_options_with_delete.append("--checksum")
             
-            # Thumb drive -> Local (safe sync, no deletion)
+            # Remote -> Local (safe sync, no deletion)
             sync_pairs.append({
                 "name": f"video_{video_dir}_to_local",
-                "source": f"/media/mmchenry/ThumbDrive/{video_dir}",
-                "destination": f"{video_root}/{video_dir}",
+                "source": f"{self.remote_base}/{video_dir}",
+                "destination": f"{self.local_video_root}/{video_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_safe
             })
             
-            # Local -> Thumb drive (with deletion - source deletions propagate)
+            # Local -> Remote (with deletion - source deletions propagate)
             sync_pairs.append({
-                "name": f"video_{video_dir}_to_thumb",
-                "source": f"{video_root}/{video_dir}",
-                "destination": f"/media/mmchenry/ThumbDrive/{video_dir}",
+                "name": f"video_{video_dir}_to_remote",
+                "source": f"{self.local_video_root}/{video_dir}",
+                "destination": f"{self.remote_base}/{video_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_with_delete
             })
         
-        # Sync one-way video directories (network -> thumb drive only)
-        for video_dir in one_way_video_dirs:
+        # Sync one-way video directories (local -> remote only)
+        for video_dir in self.one_way_video_dirs:
             rsync_options = ["-av", "--progress", "--no-perms", "--no-group"]  # No --delete for one-way sync
             if self.checksum_mode:
                 rsync_options.append("--checksum")
             sync_pairs.append({
                 "name": f"video_{video_dir}_oneway",
-                "source": f"{video_root}/{video_dir}",
-                "destination": f"/media/mmchenry/ThumbDrive/{video_dir}",
+                "source": f"{self.local_video_root}/{video_dir}",
+                "destination": f"{self.remote_base}/{video_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options,
-                "description": "One-way sync: network -> thumb drive only"
+                "description": "One-way sync: local -> remote only"
             })
         
         # Default configuration with dynamic paths
@@ -250,6 +209,7 @@ class DataSyncManager:
         }
         
         # Load user overrides from config file (but don't override the paths)
+        config_path = Path(self.remote_path) / "syncing_scripts" / self.config_file
         if config_path.exists():
             try:
                 with open(config_path, 'r') as f:
@@ -272,12 +232,12 @@ class DataSyncManager:
         # Always save the current configuration with detected paths
         self.save_config()
         mode = "checksum" if self.checksum_mode else "timestamp"
-        self.logger.info(f"Configuration updated with detected paths: data_root={data_root}, video_root={video_root}")
+        self.logger.info(f"Configuration updated with detected paths: local_data_root={self.local_data_root}, local_video_root={self.local_video_root}")
         self.logger.info(f"Sync mode: {mode} comparison")
     
     def save_config(self):
         """Save current configuration to JSON file."""
-        config_path = Path(self.thumb_drive_path) / "syncing_scripts" / self.config_file
+        config_path = Path(self.remote_path) / "syncing_scripts" / self.config_file
         try:
             with open(config_path, 'w') as f:
                 json.dump(self.config, f, indent=2)
@@ -416,10 +376,48 @@ class DataSyncManager:
             print(f"   Destination: {pair['destination']}")
             print(f"   Options: {' '.join(pair.get('rsync_options', []))}")
             print()
+    
+    def sync_pair_by_name(self, pair_name: str, dry_run: bool = False) -> bool:
+        """Synchronize a specific pair by name."""
+        for pair in self.config["sync_pairs"]:
+            if pair["name"] == pair_name:
+                return self.sync_pair(pair, dry_run)
+        
+        self.logger.error(f"Sync pair '{pair_name}' not found")
+        return False
+
+
+def create_sync_manager(local_data_root: str, local_video_root: str, data_dirs: List[str], 
+                       video_dirs: List[str], one_way_video_dirs: List[str],
+                       remote_base: str = "/media/mmchenry/ThumbDrive/",
+                       checksum_mode: bool = False) -> DataSyncManager:
+    """Create and configure a DataSyncManager with the provided parameters."""
+    
+    print(f"Local data root: {local_data_root}")
+    print(f"Local video root: {local_video_root}")
+    print(f"Remote base: {remote_base}")
+    
+    # Setup directories
+    setup_sync_directories(data_dirs, video_dirs, one_way_video_dirs, remote_base)
+    
+    # Create sync manager with custom configuration
+    sync_manager = DataSyncManager(checksum_mode=checksum_mode)
+    sync_manager.local_data_root = local_data_root
+    sync_manager.local_video_root = local_video_root
+    sync_manager.data_dirs = data_dirs
+    sync_manager.video_dirs = video_dirs
+    sync_manager.one_way_video_dirs = one_way_video_dirs
+    sync_manager.remote_base = remote_base
+    
+    # Reload configuration with new parameters
+    sync_manager.load_config()
+    
+    return sync_manager
+
 
 def main():
     """Main function to handle command line arguments and execute sync."""
-    parser = argparse.ArgumentParser(description="Synchronize data between thumb drive and network storage")
+    parser = argparse.ArgumentParser(description="Synchronize data between remote volume and local storage")
     parser.add_argument("--dry-run", action="store_true", 
                        help="Preview changes without making them")
     parser.add_argument("--list", action="store_true", 
@@ -433,8 +431,47 @@ def main():
     
     args = parser.parse_args()
     
+    # Default configuration - can be overridden by calling create_sync_manager directly
+    if os.path.exists("/mnt/schooling_data"):
+        local_data_root = "/mnt/schooling_data/catfish_flowtank_kinematics"
+        local_video_root = "/mnt/schooling_video/catfish_kinematics"
+        print("✓ Using NETWORK paths (prioritized)")
+        
+    elif os.path.exists("/home/mmchenry/Documents/catfish_kinematics"):
+        local_data_root = "/home/mmchenry/Documents/catfish_kinematics"
+        local_video_root = "/home/mmchenry/Documents/catfish_kinematics"
+        print("⚠️  Using LOCAL paths (network not available)")
+    else:
+        raise RuntimeError("Could not find directory to sync with.")
+
+    # Default directory lists
+    data_dirs = [
+        "mean_images",
+        "sleap_flowtank_under_1",
+        "sleap_flowtank_under_3",
+        "sleap_flowtank_side_1",
+        "sleap_flowtank_side_3",
+        "syncing_scripts",
+        "matlab_data"
+    ]
+
+    video_dirs = [
+        "processed_video"
+    ]
+
+    one_way_video_dirs = [
+        "raw"
+    ]
+    
     # Initialize sync manager
-    sync_manager = DataSyncManager(args.config, args.checksum)
+    sync_manager = create_sync_manager(
+        local_data_root=local_data_root,
+        local_video_root=local_video_root,
+        data_dirs=data_dirs,
+        video_dirs=video_dirs,
+        one_way_video_dirs=one_way_video_dirs,
+        checksum_mode=args.checksum
+    )
     
     if args.list:
         sync_manager.list_sync_pairs()
@@ -456,6 +493,7 @@ def main():
         # Sync all pairs
         success = sync_manager.sync_all(args.dry_run)
         sys.exit(0 if success else 1)
+
 
 if __name__ == "__main__":
     main()
