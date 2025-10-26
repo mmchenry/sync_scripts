@@ -5,7 +5,7 @@ import os
 from sync_data import create_sync_manager
 
 # Whether to use checksum mode, which is more robust but slower
-checksum_mode = True
+checksum_mode = False
 
 # List of data directories to sync
 data_dirs = [
@@ -14,7 +14,6 @@ data_dirs = [
     "sleap_flowtank_under_3",
     "sleap_flowtank_side_1",
     "sleap_flowtank_side_3",
-    "syncing_scripts",
     "matlab_data"
 ]
 
@@ -25,7 +24,7 @@ video_dirs = [
 
 # List of one-way video directories (local -> remote only)
 one_way_video_dirs = [
-    "raw"
+    # "raw"
 ]
 
 
@@ -124,13 +123,21 @@ sync_manager.sync_all(dry_run=True)
 sync_manager.sync_all(dry_run=False)
 
 
-# %% =======================================================
-""" At School Linux machine + Network drive """
-# %% =======================================================
 
-# %% =======================================================
-""" At School Linux machine + Thumb drive """
-# %% =======================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
