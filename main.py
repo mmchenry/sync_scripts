@@ -31,25 +31,20 @@ one_way_video_dirs = [
 # %% =======================================================
 """ Paths for Linux machine + Thumb drive """
 
-# Detect paths automatically - check for network paths first
-if os.path.exists("/vortex/schooling_video"):
+# WORK Linux directory
+if os.path.exists("/vortex/schooling_video") and os.path.exists("/flux/schooling_data"):
     local_data_root = "/flux/schooling_data/catfish_flowtank_kinematics"
     local_video_root = "/vortex/schooling_video/catfish_kinematics"
+    local_log_root = "/flux/schooling_data/catfish_flowtank_log"
     print("✓ Using NETWORK paths (prioritized)")
     
-# Check for local Linux paths (multiple possible locations)
+# HOME Linux directory
 elif os.path.exists("/home/mmchenry/Documents/catfish_kinematics"):
-    local_data_root = "/home/mmchenry/Documents/catfish_kinematics"
-    local_video_root = "/home/mmchenry/Documents/catfish_kinematics"
+    local_data_root = "/home/mmchenry/Documents/catfish_kinematics/data"
+    local_video_root = "/home/mmchenry/Documents/catfish_kinematics/video"
+    local_log_root = "/home/mmchenry/Documents/catfish_flowtank_log"
     print("⚠️  Using LOCAL paths (network not available)")
-elif os.path.exists("/home/mmchenry/Documents/catfish_flowtank"):
-    local_data_root = "/home/mmchenry/Documents/catfish_flowtank"
-    local_video_root = "/home/mmchenry/Documents/catfish_flowtank"
-    print("⚠️  Using LOCAL paths (catfish_flowtank directory)")
-elif os.path.exists("/home/mmchenry/Documents/From old Pop!OS system/catfish_kinematics"):
-    local_data_root = "/home/mmchenry/Documents/From old Pop!OS system/catfish_kinematics"
-    local_video_root = "/home/mmchenry/Documents/From old Pop!OS system/catfish_kinematics"
-    print("⚠️  Using LOCAL paths (old Pop!OS system directory)")
+
 # Check for Mac paths
 elif os.path.exists("/Users/mmchenry/Documents"):
     local_data_root = "/Users/mmchenry/Documents/Projects/catfish_kinematics"

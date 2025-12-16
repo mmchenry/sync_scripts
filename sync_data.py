@@ -178,11 +178,15 @@ class DataSyncManager:
             if self.checksum_mode:
                 rsync_options_with_delete.append("--checksum")
             
+            # Normalize paths to avoid double slashes
+            remote_base = self.remote_data_base.rstrip("/")
+            local_base = self.local_data_root.rstrip("/")
+            
             # Remote -> Local (safe sync, no deletion)
             sync_pairs.append({
                 "name": f"data_{data_dir}_to_local",
-                "source": f"{self.remote_data_base}/{data_dir}",
-                "destination": f"{self.local_data_root}/{data_dir}",
+                "source": f"{remote_base}/{data_dir}",
+                "destination": f"{local_base}/{data_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_safe
             })
@@ -190,8 +194,8 @@ class DataSyncManager:
             # Local -> Remote (with deletion - source deletions propagate)
             sync_pairs.append({
                 "name": f"data_{data_dir}_to_remote",
-                "source": f"{self.local_data_root}/{data_dir}",
-                "destination": f"{self.remote_data_base}/{data_dir}",
+                "source": f"{local_base}/{data_dir}",
+                "destination": f"{remote_base}/{data_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_with_delete
             })
@@ -208,11 +212,15 @@ class DataSyncManager:
             if self.checksum_mode:
                 rsync_options_with_delete.append("--checksum")
             
+            # Normalize paths to avoid double slashes
+            remote_base = self.remote_video_base.rstrip("/")
+            local_base = self.local_video_root.rstrip("/")
+            
             # Remote -> Local (safe sync, no deletion)
             sync_pairs.append({
                 "name": f"video_{video_dir}_to_local",
-                "source": f"{self.remote_video_base}/{video_dir}",
-                "destination": f"{self.local_video_root}/{video_dir}",
+                "source": f"{remote_base}/{video_dir}",
+                "destination": f"{local_base}/{video_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_safe
             })
@@ -220,8 +228,8 @@ class DataSyncManager:
             # Local -> Remote (with deletion - source deletions propagate)
             sync_pairs.append({
                 "name": f"video_{video_dir}_to_remote",
-                "source": f"{self.local_video_root}/{video_dir}",
-                "destination": f"{self.remote_video_base}/{video_dir}",
+                "source": f"{local_base}/{video_dir}",
+                "destination": f"{remote_base}/{video_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options_with_delete
             })
@@ -231,10 +239,13 @@ class DataSyncManager:
             rsync_options = ["-av", "--progress", "--no-perms", "--no-group"]  # No --delete for one-way sync
             if self.checksum_mode:
                 rsync_options.append("--checksum")
+            # Normalize paths to avoid double slashes
+            remote_base = self.remote_video_base.rstrip("/")
+            local_base = self.local_video_root.rstrip("/")
             sync_pairs.append({
                 "name": f"video_{video_dir}_oneway",
-                "source": f"{self.local_video_root}/{video_dir}",
-                "destination": f"{self.remote_video_base}/{video_dir}",
+                "source": f"{local_base}/{video_dir}",
+                "destination": f"{remote_base}/{video_dir}",
                 "enabled": True,
                 "rsync_options": rsync_options,
                 "description": "One-way sync: local -> remote only"
@@ -324,6 +335,18 @@ class DataSyncManager:
         # Add specific options for this sync pair (these already include global options)
         cmd.extend(rsync_options)
         
+        # Add verbose output to show what files are being checked/transferred
+        if "-v" not in rsync_options and "--verbose" not in rsync_options:
+            cmd.append("-v")
+        
+        # Add stats to show detailed transfer statistics
+        if "--stats" not in rsync_options:
+            cmd.append("--stats")
+        
+        # Add itemize-changes to show detailed file information (what changed)
+        if "--itemize-changes" not in rsync_options:
+            cmd.append("--itemize-changes")
+        
         # Add exclude patterns
         for pattern in self.config.get("exclude_patterns", []):
             cmd.extend(["--exclude", pattern])
@@ -332,8 +355,12 @@ class DataSyncManager:
         if dry_run:
             cmd.append("--dry-run")
         
+        # Normalize paths to avoid double slashes
+        source_normalized = source.rstrip("/") + "/"
+        destination_normalized = destination.rstrip("/")
+        
         # Add source and destination
-        cmd.extend([f"{source}/", destination])
+        cmd.extend([source_normalized, destination_normalized])
         
         return cmd
     
@@ -384,9 +411,48 @@ class DataSyncManager:
         success, output = self.run_rsync(source, destination, rsync_options, dry_run)
         
         if success:
-            self.logger.info(f"Sync completed successfully for '{name}'")
-            if output.strip():
-                self.logger.info(f"Output: {output}")
+            # Parse output to show what happened
+            output_lines = output.strip().split('\n')
+            
+            # Extract file transfer lines (itemize-changes output)
+            file_changes = []
+            stats_section = False
+            stats_lines = []
+            
+            for line in output_lines:
+                line = line.strip()
+                if not line:
+                    continue
+                # Itemize-changes lines start with indicators like >f, >d, etc.
+                if line and (line.startswith('>') or line.startswith('<') or line.startswith('c') or line.startswith('h') or line.startswith('*')):
+                    file_changes.append(line)
+                # Stats section starts with "Number of files"
+                elif "Number of files" in line or "Total file size" in line or "Total transferred file size" in line:
+                    stats_section = True
+                    stats_lines.append(line)
+                elif stats_section and (":" in line or line.startswith("sent ") or line.startswith("total size")):
+                    stats_lines.append(line)
+            
+            if file_changes:
+                self.logger.info(f"Sync completed successfully for '{name}' - Files changed:")
+                for line in file_changes[:20]:  # Show first 20 changes
+                    self.logger.info(f"  {line}")
+                if len(file_changes) > 20:
+                    self.logger.info(f"  ... and {len(file_changes) - 20} more files")
+            elif stats_lines:
+                # Show stats if available
+                self.logger.info(f"Sync completed successfully for '{name}' - Statistics:")
+                for line in stats_lines[:10]:  # Show first 10 stat lines
+                    self.logger.info(f"  {line}")
+            else:
+                # Fallback to basic summary
+                summary_lines = [line for line in output_lines if line.startswith('sent ') or line.startswith('total size')]
+                if summary_lines:
+                    self.logger.info(f"Sync completed successfully for '{name}' - No files needed transfer (already in sync)")
+                    for line in summary_lines:
+                        self.logger.info(f"  {line}")
+                else:
+                    self.logger.info(f"Sync completed successfully for '{name}' - No files needed transfer (already in sync)")
         else:
             self.logger.error(f"Sync failed for '{name}': {output}")
         
