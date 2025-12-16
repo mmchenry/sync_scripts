@@ -29,7 +29,7 @@ one_way_video_dirs = [
 
 
 # %% =======================================================
-""" Paths for Home Linux machine + Thumb drive """
+""" Paths for Linux machine + Thumb drive """
 
 # Detect paths automatically - check for network paths first
 if os.path.exists("/vortex/schooling_video"):
