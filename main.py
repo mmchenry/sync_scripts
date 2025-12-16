@@ -31,54 +31,66 @@ one_way_video_dirs = [
 # %% =======================================================
 """ Paths for Home Linux machine + Thumb drive """
 
-# Detect paths automatically
-if os.path.exists("/mnt/schooling_data"):
-    local_data_root = "/mnt/schooling_data/catfish_flowtank_kinematics"
-    local_video_root = "/mnt/schooling_video/catfish_kinematics"
+# Detect paths automatically - check for network paths first
+if os.path.exists("/vortex/schooling_video"):
+    local_data_root = "/flux/schooling_data/catfish_flowtank_kinematics"
+    local_video_root = "/vortex/schooling_video/catfish_kinematics"
     print("✓ Using NETWORK paths (prioritized)")
     
+# Check for local Linux paths (multiple possible locations)
 elif os.path.exists("/home/mmchenry/Documents/catfish_kinematics"):
     local_data_root = "/home/mmchenry/Documents/catfish_kinematics"
     local_video_root = "/home/mmchenry/Documents/catfish_kinematics"
     print("⚠️  Using LOCAL paths (network not available)")
+elif os.path.exists("/home/mmchenry/Documents/catfish_flowtank"):
+    local_data_root = "/home/mmchenry/Documents/catfish_flowtank"
+    local_video_root = "/home/mmchenry/Documents/catfish_flowtank"
+    print("⚠️  Using LOCAL paths (catfish_flowtank directory)")
+elif os.path.exists("/home/mmchenry/Documents/From old Pop!OS system/catfish_kinematics"):
+    local_data_root = "/home/mmchenry/Documents/From old Pop!OS system/catfish_kinematics"
+    local_video_root = "/home/mmchenry/Documents/From old Pop!OS system/catfish_kinematics"
+    print("⚠️  Using LOCAL paths (old Pop!OS system directory)")
+# Check for Mac paths
+elif os.path.exists("/Users/mmchenry/Documents"):
+    local_data_root = "/Users/mmchenry/Documents/Projects/catfish_kinematics"
+    local_video_root = "/Users/mmchenry/Documents/Video/catfish_kinematics"
+    print("✓ Using MAC laptop paths")
 else:
     raise RuntimeError("Could not find directory to sync with.")
 
-# Remote volume base path
-remote_data_root = "/media/mmchenry/ThumbDrive/"
-remote_video_root = "/media/mmchenry/ThumbDrive/"
-if os.path.exists(remote_data_root):
-    print("✓ Using THUMB drive paths")
-else:
-    raise RuntimeError("Could not find Thumbdrive to sync with.")
+# Remote volume base path - check multiple possible mount points
+remote_data_root = None
+remote_video_root = None
+
+# Check for thumb drive in various locations
+thumb_drive_paths = [
+    "/mnt/thumbdrive",
+    "/media/mmchenry/thumbdrive",
+    "/media/mmchenry/USB_DRIVE",
+    "/media/mmchenry/ThumbDrive",
+    "/Volumes/Shared/catfish_kinematics"  # Mac mount point
+]
+
+for path in thumb_drive_paths:
+    if os.path.exists(path):
+        remote_data_root = path + "/data/"
+        remote_video_root = path + "/video/"
+        print(f"✓ Using THUMB drive paths: {path}")
+        break
+
+if remote_data_root is None:
+    raise RuntimeError("Could not find thumbdrive to sync with. Checked: " + ", ".join(thumb_drive_paths))
+
+# Local log root - syncs with remote data
+local_log_root = "/home/mmchenry/Documents/catfish_flowtank_log"
+remote_log_root = remote_data_root + "catfish_flowtank_log/"  # Logs sync to catfish_flowtank_log subdirectory in remote data
 
 print(f"Local data root: {local_data_root}")
 print(f"Local video root: {local_video_root}")
+print(f"Local log root: {local_log_root}")
 print(f"Remote data root: {remote_data_root}")
 print(f"Remote video root: {remote_video_root}")
-
-
-# %% =======================================================
-""" Paths for Mac Laptop + Linux machine """
-
-if os.path.exists("/Users/mmchenry/Documents"):
-    print("✓ Using MAC laptop paths")
-    local_data_root = "/Users/mmchenry/Documents/Projects/catfish_kinematics"
-    local_video_root = "/Users/mmchenry/Documents/Video/catfish_kinematics"
-else:
-    raise RuntimeError("Could not find Mac laptop to sync with.")
-
-if os.path.exists("/Volumes/Shared/catfish_kinematics"):
-    remote_data_root = "/Volumes/Shared/catfish_kinematics"
-    remote_video_root = "/Volumes/Shared/catfish_kinematics"
-    print("✓ Using Linux machine paths")
-else:
-    raise RuntimeError("Could not find Linux machine to sync with.")
-
-print(f"Local data root: {local_data_root}")
-print(f"Local video root: {local_video_root}")
-print(f"Remote data root: {remote_data_root}")
-print(f"Remote video root: {remote_video_root}")
+print(f"Remote log root: {remote_log_root}")
 
 
 # %% =======================================================
@@ -121,21 +133,6 @@ sync_manager.sync_all(dry_run=True)
 
 # Uncomment the line below to perform actual sync
 sync_manager.sync_all(dry_run=False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
